@@ -1,31 +1,35 @@
-from flask import Flask, request
+from flask import Flask, render_template, request
 
-from natal import calculate_natal_chart, relationship
+from engine import calculate_natal_chart, apply_method
 
 app = Flask(__name__)
 
+
 @app.route('/')
-def hello_world():
-    a = calculate_natal_chart("Adr", 1990, 6, 25, 22, 15, "Tatuapé", "America/Sao_Paulo", "Brazil")
-    b = calculate_natal_chart("Lare", 1989, 7, 7, 12, 00, "Santo André", "America/Sao_Paulo", "Brazil")
-    r = relationship(a,b)
-    return "r"
+def index():
+    return render_template('index.html')
 
-@app.route('/natal')
-def calculate_natal_chart_route():
-    name = request.args.get('name')
-    year = int(request.args.get('year'))
-    month = int(request.args.get('month'))
-    day = int(request.args.get('day'))
-    hour = int(request.args.get('hour'))
-    minute = int(request.args.get('minute'))
-    city = request.args.get('city')
-    timezone = request.args.get('timezone')
-    nation = request.args.get('nation')
-
+@app.route('/calculate' , methods=['POST'])
+def calculate():
+    
+    data = request.json  # Correct way to get JSON data from the request body
+    
+    name = data.get('name')
+    year = data.get('year')
+    month = data.get('month')
+    day = data.get('day')
+    hour = data.get('hour')
+    minute = data.get('minute')
+    city = data.get('city')
+    timezone = data.get('timezone')
+    nation = data.get('nation')
+    method = data.get('method')
+    
     # Call the calculate_natal_chart function with the provided parameters
-    result = calculate_natal_chart(name, year, month, day, hour, minute, city, timezone, nation)
+    raw_data = calculate_natal_chart(name, year, month, day, hour, minute, city, timezone, nation)
+    result = apply_method(raw_data, method)
+
     return result.json()
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
