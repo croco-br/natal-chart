@@ -1,5 +1,4 @@
-from kerykeion import AstrologicalSubject, Report
-
+from kerykeion import AstrologicalSubject
 from geocoder import get_lat_lon
 
 import json
@@ -25,11 +24,7 @@ def calculate_natal_chart(name, year, month, day, hour, minute, city, timezone, 
         nation=nation,
     )
 
-def apply_method(data, option):
-    if option == 'traditional':
-        report = Report(data)
-        report.print_report()
-        
+def apply_method(data, option):     
     if option == 'hermetic':
         data.sun.sign = get_hermetic_sign(data.sun.sign, data.sun.position)
         data.moon.sign = get_hermetic_sign(data.moon.sign, data.moon.position)

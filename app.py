@@ -28,7 +28,6 @@ def calculate():
     # Call the calculate_natal_chart function with the provided parameters
     raw_data = calculate_natal_chart(name, year, month, day, hour, minute, city, timezone, nation)
     result = apply_method(raw_data, method)
-
     return result.json()
 
 if __name__ == '__main__':

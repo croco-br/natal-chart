@@ -26,8 +26,6 @@ async function calculate() {
         method: method
     };
 
-
-
     fetch('/calculate', {
         method: 'POST',
         headers: {
@@ -35,14 +33,26 @@ async function calculate() {
         },
         body: JSON.stringify(data)
     })
-    .then(response => 
-       response.json())
-    .then(result => {
-        alert('Natal chart calculated successfully!');
-        console.log(result);
-    })
-    .catch(error => {
-        alert('Error calculating natal chart');
-        console.error('Error:', error);
-    });
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(result => {
+            console.log(result);
+            const resultContainer = document.getElementById("result");
+
+            // Clear any previous results
+            resultContainer.innerHTML = '';
+
+            // Append the new result with indentation
+            const resultElement = document.createElement('pre');
+            resultElement.textContent = JSON.stringify(result, null, 2); // 2 spaces indentation
+            resultContainer.appendChild(resultElement);
+        })
+        .catch(error => {
+            alert('Error calculating natal chart');
+            console.error('Error:', error);
+        });
 }
