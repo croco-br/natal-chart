@@ -37,6 +37,8 @@ def apply_method(data, option):
         data.neptune.sign = get_hermetic_sign(data.neptune.sign, data.neptune.position)
         data.pluto.sign = get_hermetic_sign(data.pluto.sign, data.pluto.position)
         data.chiron.sign = get_hermetic_sign(data.chiron.sign, data.chiron.position)
+        data.first_house.sign = get_hermetic_sign(data.first_house.sign, data.first_house.position)
+    
       
     if option == 'angels':
         data.sun.sign = get_angel(data.sun.sign, data.sun.position)
@@ -50,7 +52,7 @@ def apply_method(data, option):
         data.neptune.sign = get_angel(data.neptune.sign, data.neptune.position)
         data.pluto.sign = get_angel(data.pluto.sign, data.pluto.position)
         data.chiron.sign = get_angel(data.chiron.sign, data.chiron.position)
-                
+        data.first_house.sign = get_angel(data.first_house.sign, data.first_house.position)     
     return data
 
 def get_hermetic_sign(sign, pos):
