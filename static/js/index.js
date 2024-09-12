@@ -1,4 +1,5 @@
 async function calculate() {
+    show_loader()
     const name = document.getElementById('name').value;
     const birthdate = document.getElementById('birthdate').value;
     const birthtime = document.getElementById('birthtime').value;
@@ -7,10 +8,7 @@ async function calculate() {
     const timezone = document.getElementById('timezone').value;
     const method = document.getElementById('method').value;
 
-    // Split the birthdate into year, month, and day
     const [year, month, day] = birthdate.split('-').map(Number);
-
-    // Split the birthtime into hour and minute
     const [hour, minute] = birthtime.split(':').map(Number);
 
     const data = {
@@ -26,6 +24,11 @@ async function calculate() {
         method: method
     };
 
+    const resultContainer = document.getElementById('result');
+
+    // Clear any previous results
+    resultContainer.innerHTML = '';
+
     fetch('/calculate', {
         method: 'POST',
         headers: {
@@ -40,13 +43,6 @@ async function calculate() {
             return response.json();
         })
         .then(result => {
-            console.log(result);
-            const resultContainer = document.getElementById("result");
-
-            // Clear any previous results
-            resultContainer.innerHTML = '';
-
-            // Append the new result with indentation
             const resultElement = document.createElement('pre');
             resultElement.textContent = JSON.stringify(result, null, 2); // 2 spaces indentation
             resultContainer.appendChild(resultElement);
@@ -54,5 +50,18 @@ async function calculate() {
         .catch(error => {
             alert('Error calculating natal chart');
             console.error('Error:', error);
+        })
+        .finally(() => {
+            hide_loader()
         });
+}
+
+function hide_loader() {
+    const loader = document.getElementById('calculate-button');
+    loader.classList.remove('is-loading');
+}
+
+function show_loader() {
+    const loader = document.getElementById('calculate-button');
+    loader.classList.add('is-loading');
 }
