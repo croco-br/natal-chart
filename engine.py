@@ -1,11 +1,5 @@
 from kerykeion import AstrologicalSubject
 from geocoder import get_lat_lon
-
-import json
-
-# Open the JSON file
-with open('db.json', 'r') as f:
-    db = json.load(f)
     
 def calculate_natal_chart(name, year, month, day, hour, minute, city, timezone, nation):
     lat, lon = get_lat_lon(city)
