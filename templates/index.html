@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Natal Chart Input</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='font-awesome-4.7.0/css/font-awesome.min.css') }}">
     <script src="{{ url_for('static', filename='js/index.js') }}" defer></script>
 </head>
 
@@ -15,73 +16,113 @@
             <div class="box">
                 <h1 class="title has-text-centered">Mapa Astral</h1>
                 <form onsubmit="calculate(); return false;">
-                    <div class="field">
-                        <label class="label" for="name">Nome</label>
-                        <div class="control">
-                            <input class="input" type="text" id="name" placeholder="Nome" value="John Doe" required>
-                        </div>
-                    </div>
+                    <fieldset>
+                        <legend class="subtitle has-text-centered mb-4">Informações Pessoais</legend>
 
-                    <div class="field">
-                        <label class="label" for="birthdate">Data de Nascimento</label>
-                        <div class="control">
-                            <input class="input" type="date" id="birthdate" value="1990-06-25" required>
-                        </div>
-                    </div>
-
-                    <div class="field">
-                        <label class="label" for="birthtime">Hora de Nascimento</label>
-                        <div class="control">
-                            <input class="input" type="time" id="birthtime" value="22:15" required>
-                        </div>
-                    </div>
-
-                    <div class="field">
-                        <label class="label" for="city">Cidade</label>
-                        <div class="control">
-                            <input class="input" type="text" id="city" placeholder="Cidade" value="São Paulo" required>
-                        </div>
-                    </div>
-
-                    <div class="field">
-                        <label class="label" for="nation">Nação</label>
-                        <div class="control">
-                            <input class="input" type="text" id="nation" placeholder="Nação" value="Brazil" required>
-                        </div>
-                    </div>
-
-                    <div class="field">
-                        <label class="label" for="timezone">Fuso Horário</label>
-                        <div class="control">
-                            <input class="input" type="text" id="timezone" placeholder="Fuso Horário"
-                                value="America/Sao_Paulo" required>
-                        </div>
-                    </div>
-
-                    <div class="field">
-                        <label class="label" for="method">Método</label>
-                        <div class="control">
-                            <div class="select is-fullwidth">
-                                <select id="method" name="options">
-                                    <option value="traditional">Astrologia Tradicional (12 Signos)</option>
-                                    <option value="hermetic">Astrologia Hermética (24 Signos)</option>
-                                    <option value="angels" selected>Anjos Cabalísticos (72 Signos)</option>
-                                </select>
+                        <div class="field">
+                            <label class="label" for="name">Nome</label>
+                            <div class="control has-icons-left">
+                                <input class="input" type="text" id="name" placeholder="Nome" value="John Doe" required>
+                                <span class="icon is-small is-left">
+                                    <i class="fa fa-user"></i>
+                                </span>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="field">
-                        <div class="control">
-                            <button id="calculate-button" class="button is-primary is-fullwidth" type="submit">Calcular</button>
+                        <div class="columns">
+                            <div class="column">
+                                <div class="field">
+                                    <label class="label" for="birthdate">Data de Nascimento</label>
+                                    <div class="control has-icons-left">
+                                        <input class="input" type="date" id="birthdate" value="1990-06-25" required>
+                                        <span class="icon is-small is-left">
+                                            <i class="fa fa-calendar"></i>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="column">
+                                <div class="field">
+                                    <label class="label" for="birthtime">Hora de Nascimento</label>
+                                    <div class="control has-icons-left">
+                                        <input class="input" type="time" id="birthtime" value="22:15" required>
+                                        <span class="icon is-small is-left">
+                                            <i class="fa fa-clock-o"></i>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                    </div>
+
+                        <div class="field">
+                            <label class="label" for="city">Cidade</label>
+                            <div class="control has-icons-left">
+                                <input class="input" type="text" id="city" placeholder="Cidade" value="São Paulo"
+                                    required>
+                                <span class="icon is-small is-left">
+                                    <i class="fa fa-map-marker"></i>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="columns">
+                            <div class="column">
+                                <div class="field">
+                                    <label class="label" for="nation">Nação</label>
+                                    <div class="control has-icons-left">
+                                        <input class="input" type="text" id="nation" placeholder="Nação" value="Brazil"
+                                            required>
+                                        <span class="icon is-small is-left">
+                                            <i class="fa fa-flag"></i>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="column">
+                                <div class="field">
+                                    <label class="label" for="timezone">Fuso Horário</label>
+                                    <div class="control has-icons-left">
+                                        <input class="input" type="text" id="timezone" placeholder="Fuso Horário"
+                                            value="America/Sao_Paulo" required>
+                                        <span class="icon is-small is-left">
+                                            <i class="fa fa-globe"></i>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <label class="label" for="method">Método</label>
+                            <div class="control">
+                                <div class="select is-fullwidth">
+                                    <select id="method" name="options">
+                                        <option value="traditional">Astrologia Tradicional (12 Signos)</option>
+                                        <option value="hermetic">Astrologia Hermética (24 Signos)</option>
+                                        <option value="angels" selected>Anjos Cabalísticos (72 Signos)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="field mt-5">
+                            <div class="control">
+                                <button id="calculate-button" class="button is-primary is-fullwidth is-medium"
+                                    type="submit">
+                                    Calcular Mapa Astral
+                                </button>
+                            </div>
+                        </div>
+                    </fieldset>
                 </form>
             </div>
         </div>
     </section>
-    <div id="result">
 
+    <div id="result" class="section">
+        <!-- Result will be displayed here -->
     </div>
 </body>
 
