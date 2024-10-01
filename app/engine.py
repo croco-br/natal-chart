@@ -1,16 +1,19 @@
 from kerykeion import AstrologicalSubject
-from geocoder import get_lat_lon
+
+from app.extensions import  SerializableAstrologicalSubject
+from app.geocoder import get_lat_lon
+
     
 def calculate_natal_chart(name, year, month, day, hour, minute, city, timezone, nation):
     lat, lon = get_lat_lon(city)
 
-    return AstrologicalSubject(
-        name,
-        year,
-        month,
-        day,
-        hour,
-        minute,
+    return SerializableAstrologicalSubject(
+        name=name,
+        year=year,
+        month=month,
+        day=day,
+        hour=hour,
+        minute=minute,
         lng=lon,
         lat=lat,
         tz_str=timezone,
