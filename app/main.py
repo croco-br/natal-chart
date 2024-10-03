@@ -17,7 +17,6 @@ async def index(request: Request):
 
 @app.post("/calculate", response_class=JSONResponse)
 async def calculate(data: dict = Body(...)):
-    #data = await request.json()  # Correct way to get JSON data from the request body
 
     name = data.get('name')
     year = data.get('year')
@@ -30,11 +29,10 @@ async def calculate(data: dict = Body(...)):
     nation = data.get('nation')
     method = data.get('method')
     
-    # Call the calculate_natal_chart function with the provided parameters
     raw_data = calculate_natal_chart(name, year, month, day, hour, minute, city, timezone, nation)
 
     result = apply_method(raw_data, method)
 
-    return JSONResponse(content=result.to_dict())
+    return JSONResponse(content=result)
 
 
