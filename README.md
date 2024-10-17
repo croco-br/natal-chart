@@ -18,6 +18,8 @@ FastAPI
 
 Bulma
 
+[Kerykeion](https://pypi.org/project/kerykeion/)
+
 # Instruções de Instalação
 Para instalar e executar o projeto, siga estas etapas:
 
