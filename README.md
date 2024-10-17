@@ -5,7 +5,9 @@ Esse repositório contém código que calcula mapas astrais, usando o método co
 
 # Estrutura do Diretório
 O repositório contém os seguintes arquivos e diretórios principais:
-app: arquivos python, arquivos estáticos (Js e html)
+- app: arquivos python
+- app/static: arquivos JS
+- app/templates: arquivos html
 
 # Tecnologias utilizadas
 Python
