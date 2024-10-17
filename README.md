@@ -1,7 +1,7 @@
 # Natal Chart Calculator
 
 # Descrição
-Esse repositório contém código que calcula mapas astrais, usando o método com 12, 24 ou 72 signos.
+Esse repositório contém código que calcula mapas astrais, usando o método com 12, 24, 72 signos ou o método da Astrologia Cabalística.
 
 É possível acessar a versão web no seguinte endereço: https://astrolens.onrender.com/
 
