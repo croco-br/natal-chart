@@ -3,6 +3,8 @@
 # Descrição
 Esse repositório contém código que calcula mapas astrais, usando o método com 12, 24 ou 72 signos.
 
+É possível acessar a versão web no seguinte endereço: https://astrolens.onrender.com/
+
 # Estrutura do Diretório
 O repositório contém os seguintes arquivos e diretórios principais:
 - app: arquivos python
