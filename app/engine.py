@@ -172,171 +172,171 @@ def get_hermetic_sign(sign, pos):
 def get_angel(sign, pos):
     if sign == "Ari":
         if 0 < pos <= 5:
-            return "Vehuiah"
+            return "Ari (Vehuiah)"
         elif 5 <= pos <= 10:
-            return "Jeliel"
+            return "Ari (Jeliel)"
         elif 10 <= pos <= 15:
-            return "Sitael"
+            return "Ari (Sitael)"
         elif 15 <= pos <= 20:
-            return "Elemiah"
+            return "Ari (Elemiah)"
         elif 20 <= pos <= 25:
-            return "Mahasiah"
+            return "Ari (Mahasiah)"
         elif 25 <= pos <= 30:
-            return "Lelahel"
+            return "Ari (Lelahel)"
 
     elif sign == "Tau":  # Taurus
         if 0 < pos <= 5:
-            return "Achaiah"
+            return "Tau (Achaiah)"
         elif 5 <= pos <= 10:
-            return "Cahethel"
+            return "Tau (Cahethel)"
         elif 10 <= pos <= 15:
-            return "Haziel"
+            return "Tau (Haziel)"
         elif 15 <= pos <= 20:
-            return "Aladiah"
+            return "Tau (Aladiah)"
         elif 20 <= pos <= 25:
-            return "Laoviah"
+            return "Tau (Laoviah)"
         elif 25 <= pos <= 30:
-            return "Hahahiah"
+            return "Tau (Hahahiah)"
 
     elif sign == "Gem":  # Gemini
         if 0 < pos <= 5:
-            return "Yesalel"
+            return "Gem (Yesalel)"
         elif 5 <= pos <= 10:
-            return "Mebahel"
+            return "Gem (Mebahel)"
         elif 10 <= pos <= 15:
-            return "Hariel"
+            return "Gem (Hariel)"
         elif 15 <= pos <= 20:
-            return "Hekamiah"
+            return "Gem (Hekamiah)"
         elif 20 <= pos <= 25:
-            return "Lauviah"
+            return "Gem (Lauviah)"
         elif 25 <= pos <= 30:
-            return "Caliel"
+            return "Gem (Caliel)"
 
     elif sign == "Can":  # Cancer
         if 0 < pos <= 5:
-            return "Leuviah"
+            return "Can (Leuviah)"
         elif 5 <= pos <= 10:
-            return "Pahaliah"
+            return "Can (Pahaliah)"
         elif 10 <= pos <= 15:
-            return "Nelchael"
+            return "Can (Nelchael)"
         elif 15 <= pos <= 20:
-            return "Ieiaiel"
+            return "Can (Ieiaiel)"
         elif 20 <= pos <= 25:
-            return "Melahel"
+            return "Can (Melahel)"
         elif 25 <= pos <= 30:
-            return "Haheuiah"
+            return "Can (Haheuiah)"
 
     elif sign == "Leo":  # Leo
         if 0 < pos <= 5:
-            return "Nith-Haiah"
+            return "Leo (Nith-Haiah)"
         elif 5 <= pos <= 10:
-            return "Haaiah"
+            return "Leo (Haaiah)"
         elif 10 <= pos <= 15:
-            return "Ierathel"
+            return "Leo (Ierathel)"
         elif 15 <= pos <= 20:
-            return "Seheiah"
+            return "Leo (Seheiah)"
         elif 20 <= pos <= 25:
-            return "Reyel"
+            return "Leo (Reyel)"
         elif 25 <= pos <= 30:
-            return "Omael"
+            return "Leo (Omael)"
 
     elif sign == "Vir":  # Virgo
         if 0 < pos <= 5:
-            return "Lecabel"
+            return "Vir (Lecabel)"
         elif 5 <= pos <= 10:
-            return "Vasahiah"
+            return "Vir (Vasahiah)"
         elif 10 <= pos <= 15:
-            return "Iehuiah"
+            return "Vir (Iehuiah)"
         elif 15 <= pos <= 20:
-            return "Lehaiah"
+            return "Vir (Lehaiah)"
         elif 20 <= pos <= 25:
-            return "Chavakiah"
+            return "Vir (Chavakiah)"
         elif 25 <= pos <= 30:
-            return "Menadel"
+            return "Vir (Menadel)"
 
     elif sign == "Lib":  # Libra
         if 0 < pos <= 5:
-            return "Aniel"
+            return "Lib (Aniel)"
         elif 5 <= pos <= 10:
-            return "Haamiah"
+            return "Lib (Haamiah)"
         elif 10 <= pos <= 15:
-            return "Rehael"
+            return "Lib (Rehael)"
         elif 15 <= pos <= 20:
-            return "Ieiazel"
+            return "Lib (Ieiazel)"
         elif 20 <= pos <= 25:
-            return "Hahahel"
+            return "Lib (Hahahel)"
         elif 25 <= pos <= 30:
-            return "Mikael"
+            return "Lib (Mikael)"
 
     elif sign == "Sco":  # Scorpio
         if 0 < pos <= 5:
-            return "Veuliah"
+            return "Sco (Veuliah)"
         elif 5 <= pos <= 10:
-            return "Yelaiah"
+            return "Sco (Yelaiah)"
         elif 10 <= pos <= 15:
-            return "Sealiah"
+            return "Sco (Sealiah)"
         elif 15 <= pos <= 20:
-            return "Ariel"
+            return "Sco (Ariel)"
         elif 20 <= pos <= 25:
-            return "Asaliah"
+            return "Sco (Asaliah)"
         elif 25 <= pos <= 30:
-            return "Mihael"
+            return "Sco (Mihael)"
 
     elif sign == "Sag":  # Sagittarius
         if 0 < pos <= 5:
-            return "Vehuel"
+            return "Sag (Vehuel)"
         elif 5 <= pos <= 10:
-            return "Daniel"
+            return "Sag (Daniel)"
         elif 10 <= pos <= 15:
-            return "Hahasiah"
+            return "Sag (Hahasiah)"
         elif 15 <= pos <= 20:
-            return "Imamiah"
+            return "Sag (Imamiah)"
         elif 20 <= pos <= 25:
-            return "Nanael"
+            return "Sag (Nanael)"
         elif 25 <= pos <= 30:
-            return "Nithael"
+            return "Sag (Nithael)"
 
     elif sign == "Cap":  # Capricorn
         if 0 < pos <= 5:
-            return "Mebaiah"
+            return "Cap (Mebaiah)"
         elif 5 <= pos <= 10:
-            return "Poiel"
+            return "Cap (Poiel)"
         elif 10 <= pos <= 15:
-            return "Nemamiah"
+            return "Cap (Nemamiah)"
         elif 15 <= pos <= 20:
-            return "Ieialel"
+            return "Cap (Ieialel)"
         elif 20 <= pos <= 25:
-            return "Harahel"
+            return "Cap (Harahel)"
         elif 25 <= pos <= 30:
-            return "Mitzrael"
+            return "Cap (Mitzrael)"
 
     elif sign == "Aqu":  # Aquarius
         if 0 < pos <= 5:
-            return "Umabel"
+            return "Aqu (Umabel)"
         elif 5 <= pos <= 10:
-            return "Iah-Hel"
+            return "Aqu (Iah-Hel)"
         elif 10 <= pos <= 15:
-            return "Anauel"
+            return "Aqu (Anauel)"
         elif 15 <= pos <= 20:
-            return "Mehiel"
+            return "Aqu (Mehiel)"
         elif 20 <= pos <= 25:
-            return "Damabiah"
+            return "Aqu (Damabiah)"
         elif 25 <= pos <= 30:
-            return "Manakel"
+            return "Aqu (Manakel)"
 
     elif sign == "Pis":  # Pisces
         if 0 < pos <= 5:
-            return "Ayel"
+            return "Pis (Ayel)"
         elif 5 <= pos <= 10:
-            return "Habuhiah"
+            return "Pis (Habuhiah)"
         elif 10 <= pos <= 15:
-            return "Rochel"
+            return "Pis (Rochel)"
         elif 15 <= pos <= 20:
-            return "Yabamiah"
+            return "Pis (Yabamiah)"
         elif 20 <= pos <= 25:
-            return "Haiaiel"
+            return "Pis (Haiaiel)"
         elif 25 <= pos <= 30:
-            return "Mumiah"
+            return "Pis (Mumiah)"
 
     return "Unknown"
 
