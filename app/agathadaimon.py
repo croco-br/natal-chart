@@ -1,45 +1,13 @@
-def apply_agathadaimon_method(chart_data):
-    result = []
-    sun_letter = agathadaimon_dict[
-        chart_data["sun"]["sign"], int(chart_data["sun"]["position"])
-    ]
-    moon_letter = agathadaimon_dict[
-        chart_data["moon"]["sign"], int(chart_data["moon"]["position"])
-    ]
-    asc_letter = agathadaimon_dict[
-        chart_data["first_house"]["sign"], int(chart_data["first_house"]["position"])
-    ]
+"""Agathos Daimon — a 3-letter name from Sun, Moon, and Ascendant degrees,
+with a day/night suffix (El for day, Iah for night) and Hebrew letter descriptions.
+"""
 
-    if int(chart_data["hour"]) >= 6 and int(chart_data["hour"]) <= 18:
-        suffix = "El"
-    else:
-        suffix = "Iah"
+from __future__ import annotations
 
-    result.append(
-        "Nome: " + sun_letter + "-" + moon_letter + "-" + asc_letter + "-" + suffix
-    )
+from app.schema import Chart
 
-    result.append(
-        "Hebraico: "
-        + hebrew_letters[sun_letter]
-        + hebrew_letters[moon_letter]
-        + hebrew_letters[asc_letter]
-        + hebrew_letters[suffix]
-    )
-
-    result.append(
-        "Descrição: "
-        + letter_correspondencies[sun_letter]
-        + " "
-        + letter_correspondencies[moon_letter]
-        + " "
-        + letter_correspondencies[asc_letter]
-    )
-
-    return result
-
-
-agathadaimon_dict = {
+# Maps (sign, degree) to Hebrew letter name
+HEBREW_LETTERS = {
     ("Ari", 0): "Aleph",
     ("Ari", 1): "Bet",
     ("Ari", 2): "Gimel",
@@ -402,7 +370,7 @@ agathadaimon_dict = {
     ("Pis", 29): "Het",
 }
 
-letter_correspondencies = {
+LETTER_CORRESPONDENCES = {
     "Aleph": "Andrógina; Porém mais Masculino do que feminina; Espiritual; Geralmente com Asas; do tipo bem mais magro",
     "Bet": " Masculino. Ativa e ligeira e colorida.",
     "Gimel": "Feminina; Grisalha, bela porém mutável. Rosto e corpo bem mais arrendondado.",
@@ -427,7 +395,7 @@ letter_correspondencies = {
     "Tav": "Andrógina. Porém mais masculino do que feminino. Obscuro e pardo.",
 }
 
-hebrew_letters = {
+HEBREW_LETTERS_UNICODE = {
     "Aleph": "א",
     "Bet": "ב",
     "Gimel": "ג",
@@ -453,3 +421,36 @@ hebrew_letters = {
     "El": "אֵל",
     "Iah": "יָהּ",
 }
+
+
+def enrich_agathadaimon(chart: Chart) -> dict:
+    """Compute the Agathadaimon name from Sun, Moon, and Ascendant.
+
+    Returns a dict with:
+    - name: constructed name with day/night suffix
+    - hebrew_letter: Hebrew unicode characters
+    - meaning: Portuguese description of each letter
+    - description: same as meaning
+    """
+    sun_letter = HEBREW_LETTERS[(chart.points["sun"].sign, int(chart.points["sun"].position))]
+    moon_letter = HEBREW_LETTERS[(chart.points["moon"].sign, int(chart.points["moon"].position))]
+    asc_letter = HEBREW_LETTERS[(chart.points["asc"].sign, int(chart.points["asc"].position))]
+
+    hour = int(chart.birth.time.split(":")[0])
+    suffix = "El" if 6 <= hour <= 18 else "Iah"
+
+    name = f"{sun_letter}-{moon_letter}-{asc_letter}-{suffix}"
+    hebrew = (
+        HEBREW_LETTERS_UNICODE[sun_letter]
+        + HEBREW_LETTERS_UNICODE[moon_letter]
+        + HEBREW_LETTERS_UNICODE[asc_letter]
+        + HEBREW_LETTERS_UNICODE[suffix]
+    )
+    meaning = f"{LETTER_CORRESPONDENCES[sun_letter]} {LETTER_CORRESPONDENCES[moon_letter]} {LETTER_CORRESPONDENCES[asc_letter]}"
+
+    return {
+        "name": name,
+        "hebrew_letter": hebrew,
+        "meaning": meaning,
+        "description": meaning,
+    }

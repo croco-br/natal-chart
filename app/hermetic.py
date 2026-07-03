@@ -1,79 +1,61 @@
-def apply_hermetic_method(data):
-    data.sun.sign = get_hermetic_sign(data.sun.sign, data.sun.position)
-    data.moon.sign = get_hermetic_sign(data.moon.sign, data.moon.position)
-    data.mercury.sign = get_hermetic_sign(data.mercury.sign, data.mercury.position)
-    data.venus.sign = get_hermetic_sign(data.venus.sign, data.venus.position)
-    data.mars.sign = get_hermetic_sign(data.mars.sign, data.mars.position)
-    data.jupiter.sign = get_hermetic_sign(data.jupiter.sign, data.jupiter.position)
-    data.saturn.sign = get_hermetic_sign(data.saturn.sign, data.saturn.position)
-    data.uranus.sign = get_hermetic_sign(data.uranus.sign, data.uranus.position)
-    data.neptune.sign = get_hermetic_sign(data.neptune.sign, data.neptune.position)
-    data.pluto.sign = get_hermetic_sign(data.pluto.sign, data.pluto.position)
-    data.chiron.sign = get_hermetic_sign(data.chiron.sign, data.chiron.position)
-    data.first_house.sign = get_hermetic_sign(
-        data.first_house.sign, data.first_house.position
-    )
+"""Hermetic tarot titles for points near the boundaries of each sign.
+
+_EARLY: titles for positions in the first degrees [0, 5].
+_LATE:  titles for positions in the last degrees  [25, 30].
+"""
+
+from __future__ import annotations
+
+import copy
+from typing import Optional
+
+from app.schema import Chart
+
+# sign -> Portuguese tarot title, for the early degrees (pos <= 5).
+_EARLY = {
+    "Ari": "Rainha de Bastões",
+    "Tau": "Principe de Moedas",
+    "Gem": "Rei de Espadas",
+    "Can": "Rainha de Taças",
+    "Leo": "Príncipe de Bastões",
+    "Vir": "Rei de Moedas",
+    "Lib": "Rainha de Espadas",
+    "Sco": "Príncipe de Taças",
+    "Sag": "Rei de Bastões",
+    "Cap": "Rainha de Moedas",
+    "Aqu": "Príncipe de Espadas",
+    "Pis": "Rei de Taças",
+}
+
+# sign -> Portuguese tarot title, for the late degrees (pos >= 25).
+_LATE = {
+    "Ari": "Principe de Moedas",
+    "Tau": "Rei de Espadas",
+    "Gem": "Rainha de Taças",
+    "Can": "Príncipe de Bastões",
+    "Leo": "Rei de Moedas",
+    "Vir": "Rainha de Espadas",
+    "Lib": "Príncipe de Taças",
+    "Sco": "Rei de Bastões",
+    "Sag": "Rainha de Moedas",
+    "Cap": "Príncipe de Espadas",
+    "Aqu": "Rei de Taças",
+    "Pis": "Rainha de Bastões",
+}
 
 
-def get_hermetic_sign(sign, pos):
-    if sign == "Ari":
-        if 0 < pos <= 5:
-            return "Rainha de Bastões"
-        if 25 <= pos <= 30:
-            return "Principe de Moedas"
-    if sign == "Tau":
-        if 0 < pos <= 5:
-            return "Principe de Moedas"
-        if 25 <= pos <= 30:
-            return "Rei de Espadas"
-    if sign == "Gem":
-        if 0 < pos <= 5:
-            return "Rei de Espadas"
-        if 25 <= pos <= 30:
-            return "Rainha de Taças"
-    if sign == "Can":
-        if 0 < pos <= 5:
-            return "Rainha de Taças"
-        if 25 <= pos <= 30:
-            return "Príncipe de Bastões"
-    if sign == "Leo":
-        if 0 < pos <= 5:
-            return "Príncipe de Bastões"
-        if 25 <= pos <= 30:
-            return "Rei de Moedas"
-    if sign == "Vir":
-        if 0 < pos <= 5:
-            return "Rei de Moedas"
-        if 25 <= pos <= 30:
-            return "Rainha de Espadas"
-    if sign == "Lib":
-        if 0 < pos <= 5:
-            return "Rainha de Espadas"
-        if 25 <= pos <= 30:
-            return "Príncipe de Taças"
-    if sign == "Sco":
-        if 0 < pos <= 5:
-            return "Príncipe de Taças"
-        if 25 <= pos <= 30:
-            return "Rei de Bastões"
-    if sign == "Sag":
-        if 0 < pos <= 5:
-            return "Rei de Bastões"
-        if 25 <= pos <= 30:
-            return "Rainha de Moedas"
-    if sign == "Cap":
-        if 0 < pos <= 5:
-            return "Rainha de Moedas"
-        if 25 <= pos <= 30:
-            return "Príncipe de Espadas"
-    if sign == "Aqu":
-        if 0 < pos <= 5:
-            return "Príncipe de Espadas"
-        if 25 <= pos <= 30:
-            return "Rei de Taças"
-    if sign == "Pis":
-        if 0 < pos <= 5:
-            return "Rei de Taças"
-        if 25 <= pos <= 30:
-            return "Rainha de Bastões"
-    return sign
+def _hermetic_title(sign: str, pos: float) -> Optional[str]:
+    """Return the hermetic tarot title for a given sign/position, or None."""
+    if pos <= 5:
+        return _EARLY.get(sign)
+    if pos >= 25:
+        return _LATE.get(sign)
+    return None
+
+
+def enrich_hermetic(chart: Chart) -> Chart:
+    """Return a *new* Chart with ``hermetic_title`` populated on every point."""
+    new_chart = copy.deepcopy(chart)
+    for point in new_chart.points.values():
+        point.hermetic_title = _hermetic_title(point.sign, point.position)
+    return new_chart

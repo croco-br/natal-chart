@@ -1,54 +1,77 @@
 # Natal Chart Calculator
 
-# Descrição
-Esse repositório contém código que calcula mapas astrais, usando o método com 12, 24, 72 signos ou o método da Astrologia Cabalística.
+Calculadora de mapas astrais com cinco métodos de análise: Tradicional (12 signos), Hermético (24 signos), Anjos Cabalísticos (72 signos), Astrologia Cabalística (Sephiroth) e Agathadaimon (Nome do Anjo da Guarda).
 
-É possível acessar a versão web no seguinte endereço: https://astrolens.onrender.com/
+## Arquitetura
 
-# Estrutura do Diretório
-O repositório contém os seguintes arquivos e diretórios principais:
-- app: arquivos python
-- app/static: arquivos JS
-- app/templates: arquivos html
+Aplicação FastAPI com pipeline unificado baseado em dataclasses. Cada método enriquece o esquema `Chart` com seus próprios campos específicos.
 
-# Tecnologias utilizadas
-Python
+### Métodos de Cálculo
 
-FastAPI
+- **Tradicional**: Mapa astral padrão com 12 signos, aspectos e posições planetárias. Frontend renderiza roda SVG interativa.
+- **Hermético**: 24 signos (12 signos + 12 títulos de tarô nas bordas dos signos). Adiciona campo `hermetic_title`. Retorna JSON.
+- **Anjos Cabalísticos**: 72 anjos do Shem HaMephorash, mapeados por bins de 5°. Adiciona campo `angel`. Retorna JSON.
+- **Sephiroth**: Mapeamento para a Árvore da Vida Cabalística (esquemas decânico e tradicional). Retorna JSON com dados já presentes no `PointData`.
+- **Agathadaimon**: Calcula nome de três letras baseado em Sol, Lua e Ascendente + sufixo dia/noite. Retorna `{chart, daimon}`.
 
-Bulma
+### API
 
-[Kerykeion](https://pypi.org/project/kerykeion/)
+**Endpoint único**: `POST /calculate`
 
-# Instruções de Instalação
-Para instalar e executar o projeto, siga estas etapas:
+```json
+{
+  "date": "1990-06-25",
+  "time": "22:15",
+  "city": "São Paulo",
+  "method": "traditional"
+}
+```
 
-# Clone o Repositório
+Resposta: método tradicional renderiza SVG no frontend; outros métodos retornam JSON cru.
+
+## Estrutura do Projeto
+
+```
+app/
+├── main.py              # FastAPI endpoints
+├── engine.py            # Pipeline unificado de cálculo
+├── schema.py            # Dataclasses: Birth, PointData, Aspect, Chart
+├── models.py            # ChartRequest (Pydantic)
+├── geocoder.py          # Geocoding e timezone automático
+├── hermetic.py          # Método hermético (24 signos)
+├── angels.py            # 72 anjos cabalísticos
+├── agathadaimon.py      # Agathos Daimon
+├── sephiroth.py         # Mapeamento Sephiroth
+├── static/js/
+│   ├── natal.js         # Renderizador SVG da roda
+│   └── index.js         # Handler do formulário
+└── templates/
+    └── index.html       # Interface web
+```
+
+## Tecnologias
+
+- **Backend**: Python 3.14, FastAPI, Kerykeion 4.2.4
+- **Frontend**: Vanilla JS, SVG puro, Bulma CSS
+- **Geocoding**: geopy + timezonefinder
+
+## Instalação
+
 ```bash
 git clone https://github.com/croco-br/natal-chart.git
-
 cd natal-chart
-```
-
-
-# Instale as Dependências
-```bash
 pip install -r requirements.txt
+uvicorn app.main:app --reload --port 8000
 ```
 
-# Execute a Aplicação
-Execute o arquivo principal da aplicação. 
+Acesse: http://127.0.0.1:8000
 
-```bash
-python3 -m uvicorn app.main:app --host 0.0.0.0 --port 5000 --reload
-```
+## Refatoração (Julho 2026)
 
-# Rodando localmente
+Unificação de dois pipelines paralelos (legacy mutável + novo canônico) em um único pipeline baseado em `Chart` dataclass. Métodos esotéricos agora são funções puras de enriquecimento. Frontend simplificado: tradicional mostra SVG, outros mostram JSON. Redução de 38% no código-fonte (1.735 → 1.078 linhas).
 
-Acesse o endereço: http://0.0.0.0:5000 no seu browser.
+## Licença
 
-
-# Licença
-Esse projeto usa a licença UNLICENSE, o que torna esse repositório domínio público.
+UNLICENSE — domínio público.
 
 

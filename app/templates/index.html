@@ -7,7 +7,9 @@
     <title>Natal Chart Input</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css">
     <link rel="stylesheet" href="{{ url_for('static', path='font-awesome-4.7.0/css/font-awesome.min.css') }}">
-    <script src="{{ url_for('static', path='js/index.js') }}" defer></script>
+    <script src="{{ url_for('static', path='js/natal.js') }}?v=7" defer></script>
+    <script src="{{ url_for('static', path='js/sephiroth.js') }}?v=7" defer></script>
+    <script src="{{ url_for('static', path='js/index.js') }}?v=7" defer></script>
 </head>
 
 <body>
@@ -63,34 +65,6 @@
                                 <span class="icon is-small is-left">
                                     <i class="fa fa-map-marker"></i>
                                 </span>
-                            </div>
-                        </div>
-
-                        <div class="columns">
-                            <div class="column">
-                                <div class="field">
-                                    <label class="label" for="nation">Nação</label>
-                                    <div class="control has-icons-left">
-                                        <input class="input" type="text" id="nation" placeholder="Nação" value="Brazil"
-                                            required>
-                                        <span class="icon is-small is-left">
-                                            <i class="fa fa-flag"></i>
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="column">
-                                <div class="field">
-                                    <label class="label" for="timezone">Fuso Horário</label>
-                                    <div class="control has-icons-left">
-                                        <input class="input" type="text" id="timezone" placeholder="Fuso Horário"
-                                            value="America/Sao_Paulo" required>
-                                        <span class="icon is-small is-left">
-                                            <i class="fa fa-globe"></i>
-                                        </span>
-                                    </div>
-                                </div>
                             </div>
                         </div>
 
