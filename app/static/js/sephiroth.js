@@ -85,6 +85,13 @@ const _POINT_GLYPH = (typeof POINT_GLYPH !== "undefined")
     : { sun:"☉", moon:"☽", mercury:"☿", venus:"♀", mars:"♂",
         jupiter:"♃", saturn:"♄", uranus:"♅", neptune:"♆", pluto:"♇", asc:"↑" };
 
+// Sign key -> zodiac glyph, for rendering inside the spheres. Reuses the
+// global SIGNS map from natal.js when available (shared <script defer> scope).
+const SIGNS_FOR_SEPHIRAH = (typeof SIGNS !== "undefined")
+    ? Object.fromEntries(SIGNS.map(s => [s.key, s.symbol]))
+    : { Ari:"♈", Tau:"♉", Gem:"♊", Can:"♋", Leo:"♌", Vir:"♍",
+        Lib:"♎", Sco:"♏", Sag:"♐", Cap:"♑", Aqu:"♒", Pis:"♓" };
+
 const NODE_R = 26;
 
 /* ---------- planet placement ---------- */
@@ -124,18 +131,22 @@ function sephirahNode(name, planets) {
     const occupied = planets && planets.length > 0;
     const r = NODE_R + (occupied ? Math.min(planets.length, 3) * 2 : 0);
 
-    // Place planet glyphs in a small cluster inside the node.
+    // Place planet glyphs in a small cluster inside the node, with the sign
+    // name rendered just below each glyph.
     const glyphHtml = (planets || []).map((p, i) => {
         const count = planets.length;
-        // arrange in a horizontal row, wrapping at 3
         const col = i % 3;
         const row = Math.floor(i / 3);
         const spread = count > 1 ? (col - (Math.min(count, 3) - 1) / 2) * 13 : 0;
         const gx = s.x + spread;
         const gy = s.y - 6 + row * 14;
+        const sy = gy + 11;
+        const signText = p.point.sign || "";
         const title = `${p.name} (${p.point.sign} ${p.point.position.toFixed(1)}°)`;
         return `<text x="${gx}" y="${gy}" text-anchor="middle" dominant-baseline="central"
-                    font-size="16" fill="#1c1917" font-weight="700"><title>${title}</title>${_POINT_GLYPH[p.name] || "·"}</text>`;
+                    font-size="16" fill="#1c1917" font-weight="700"><title>${title}</title>${_POINT_GLYPH[p.name] || "·"}</text>
+                <text x="${gx}" y="${sy}" text-anchor="middle" dominant-baseline="central"
+                    font-size="8" fill="#1c1917" opacity="0.8">${signText}</text>`;
     }).join("");
 
     return `

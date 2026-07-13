@@ -448,9 +448,32 @@ def enrich_agathadaimon(chart: Chart) -> dict:
     )
     meaning = f"{LETTER_CORRESPONDENCES[sun_letter]} {LETTER_CORRESPONDENCES[moon_letter]} {LETTER_CORRESPONDENCES[asc_letter]}"
 
+    letters = [
+        {
+            "point": "Sol",
+            "letter": sun_letter,
+            "hebrew": HEBREW_LETTERS_UNICODE[sun_letter],
+            "description": LETTER_CORRESPONDENCES[sun_letter],
+        },
+        {
+            "point": "Lua",
+            "letter": moon_letter,
+            "hebrew": HEBREW_LETTERS_UNICODE[moon_letter],
+            "description": LETTER_CORRESPONDENCES[moon_letter],
+        },
+        {
+            "point": "Ascendente",
+            "letter": asc_letter,
+            "hebrew": HEBREW_LETTERS_UNICODE[asc_letter],
+            "description": LETTER_CORRESPONDENCES[asc_letter],
+        },
+    ]
+
     return {
         "name": name,
         "hebrew_letter": hebrew,
         "meaning": meaning,
         "description": meaning,
+        "letters": letters,
+        "suffix": suffix,
     }

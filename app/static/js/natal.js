@@ -78,6 +78,18 @@ function circularSeparation(a, b) {
     return Math.min(d, 360 - d);
 }
 
+const _HOUSE_NUM = {
+    First: 1, Second: 2, Third: 3, Fourth: 4, Fifth: 5, Sixth: 6,
+    Seventh: 7, Eighth: 8, Ninth: 9, Tenth: 10, Eleventh: 11, Twelfth: 12,
+};
+
+function houseNumber(house) {
+    if (!house || house === "None") return "—";
+    const m = /^(\w+)_House$/.exec(house);
+    if (m && _HOUSE_NUM[m[1]] !== undefined) return _HOUSE_NUM[m[1]];
+    return house;
+}
+
 function detectAspects(points) {
     // points: Map<string, {lon, sign, ...}>. Returns {a,b,aspect,orb}
     const names = Array.from(points.keys());
@@ -560,10 +572,6 @@ function renderAngelsDetails(chart, target) {
         const deg = `${Math.floor(p.position)}° ${Math.round((p.position % 1) * 60)}'`;
         const idx = angelSectorForLon(p.lon);
         const angelName = ANGELS[idx] ? ANGELS[idx].angel : "—";
-        // p.angel is "Sign (AngelName)" from the API; show it directly.
-        const tag = p.angel
-            ? `<span class="tag is-info is-light">${p.angel}</span>`
-            : `<span class="has-text-grey">—</span>`;
         return `
             <tr>
                 <td><span style="font-size:18px;margin-right:6px">${POINT_GLYPH[n] || "·"}</span><strong>${n}</strong>
@@ -571,7 +579,6 @@ function renderAngelsDetails(chart, target) {
                 <td>${p.sign}</td>
                 <td>${deg} <small class="has-text-grey">(${p.lon.toFixed(2)}°)</small></td>
                 <td>${angelName}</td>
-                <td>${tag}</td>
             </tr>`;
     }).join("");
 
@@ -582,7 +589,7 @@ function renderAngelsDetails(chart, target) {
                 <strong>${birth.city}</strong> <small class="has-text-grey">(${birth.tz})</small></p>
             <p class="is-size-7 has-text-grey">72 anjos — 6 por signo, 1 por bin de 5°. Setores destacados = anjo regente do planeta.</p>
             <table class="table is-fullwidth is-narrow is-striped mt-4">
-                <thead><tr><th>Ponto</th><th>Signo</th><th>Grau</th><th>Anjo</th><th>API</th></tr></thead>
+                <thead><tr><th>Ponto</th><th>Signo</th><th>Grau</th><th>Anjo</th></tr></thead>
                 <tbody>${rows}</tbody>
             </table>
         </div>`;
@@ -614,7 +621,7 @@ function renderDetails(chart, target, aspects) {
                 <td>${p.sign}</td>
                 <td>${deg} <small class="has-text-grey">(${p.lon.toFixed(2)}° abs)</small></td>
                 <td>${p.sephirah_traditional}</td>
-                <td>${p.house || "—"}</td>
+                <td>${houseNumber(p.house)}</td>
             </tr>`;
     }).join("");
 
