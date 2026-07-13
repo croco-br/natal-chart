@@ -1,39 +1,84 @@
 /**
- * natal.js — renders a canonical Chart (from POST /calculate) as:
- *   1. A hand-built SVG natal wheel (zodiac + points + intra-chart aspect lines).
- *   2. A Bulma detail table of every point.
+ * natal.js — renderização de um Chart (POST /calculate) como SVG + tabelas.
  *
- * Fixed-zodiac orientation: Aries on the left (180° visual), signs increase
- * counter-clockwise around the ring. Absolute longitudes are plotted directly.
+ * Camadas:
+ *   1. i18n: mapas e helpers para traduzir pontos, signos, aspectos e
+ *      elementos para Português. As chaves canónicas (inglês curto) continuam
+ *      a ser o identificador interno; só a apresentação ao utilizador é
+ *      traduzida.
+ *   2. Geometria SVG: roda zodiacal, rodas hermética e dos anjos.
+ *   3. Tabelas de detalhes partilhadas (pointTable + aspectTable + detailPanel).
  *
- * API consumed: Chart.to_dict() -> { id, name, birth, points: {name -> PointData}, aspects, embedding }
+ * O zodíaco é fixo: Áries à esquerda (180° visual), signos crescem no sentido
+ * anti-horário. Longitudes absolutas são desenhadas diretamente.
+ *
+ * API: Chart.to_dict() -> { id, name, birth, points, aspects, embedding }
  */
 
-/* ---------- zodiac ring (fixed, counter-clockwise from Aries on the left) ---------- */
+/* ============================================================
+ *  i18n — tradução dos termos astrológicos para Português
+ *  (nomes das sephiroth mantêm-se como originais)
+ * ============================================================ */
+
+const POINT_PT = {
+    sun: "Sol", moon: "Lua", mercury: "Mercúrio", venus: "Vénus",
+    mars: "Marte", jupiter: "Júpiter", saturn: "Saturno",
+    uranus: "Urano", neptune: "Netuno", pluto: "Plutão", asc: "Ascendente",
+};
+
+const SIGN_PT = {
+    Ari: "Áries", Tau: "Touro", Gem: "Gêmeos", Can: "Câncer",
+    Leo: "Leão", Vir: "Virgem", Lib: "Libra", Sco: "Escorpião",
+    Sag: "Sagitário", Cap: "Capricórnio", Aqu: "Aquário", Pis: "Peixes",
+};
+
+const SIGN_PT_SHORT = {
+    Ari: "Ári", Tau: "Tau", Gem: "Gêm", Can: "Cân",
+    Leo: "Leã", Vir: "Vir", Lib: "Lib", Sco: "Esc",
+    Sag: "Sag", Cap: "Cap", Aqu: "Aqu", Pis: "Pei",
+};
+
+const ASPECT_PT = {
+    conjunction: "Conjunção", sextile: "Sextil",
+    square: "Quadratura", trine: "Trígono", opposition: "Oposição",
+};
+
+const ELEMENT_PT = { fire: "Fogo", earth: "Terra", air: "Ar", water: "Água" };
+
+const pointLabel  = k => POINT_PT[k]  || k;
+const signLabel   = k => SIGN_PT[k]   || k;
+const aspectLabel = k => ASPECT_PT[k] || k;
+const elementLabel= k => ELEMENT_PT[k]|| k;
+
+/* ============================================================
+ *  Constantes zodiacais e planetárias
+ * ============================================================ */
 
 const SIGNS = [
-    { key: "Ari", name: "Ari",    symbol: "♈", element: "fire"  },
-    { key: "Tau", name: "Tau",    symbol: "♉", element: "earth" },
-    { key: "Gem", name: "Gem",    symbol: "♊", element: "air"   },
-    { key: "Can", name: "Can",    symbol: "♋", element: "water" },
-    { key: "Leo", name: "Leo",    symbol: "♌", element: "fire"  },
-    { key: "Vir", name: "Vir",    symbol: "♍", element: "earth" },
-    { key: "Lib", name: "Lib",    symbol: "♎", element: "air"   },
-    { key: "Sco", name: "Sco",    symbol: "♏", element: "water" },
-    { key: "Sag", name: "Sag",    symbol: "♐", element: "fire"  },
-    { key: "Cap", name: "Cap",    symbol: "♑", element: "earth" },
-    { key: "Aqu", name: "Aqu",    symbol: "♒", element: "air"   },
-    { key: "Pis", name: "Pis",    symbol: "♓", element: "water" },
+    { key: "Ari", symbol: "♈", element: "fire"  },
+    { key: "Tau", symbol: "♉", element: "earth" },
+    { key: "Gem", symbol: "♊", element: "air"   },
+    { key: "Can", symbol: "♋", element: "water" },
+    { key: "Leo", symbol: "♌", element: "fire"  },
+    { key: "Vir", symbol: "♍", element: "earth" },
+    { key: "Lib", symbol: "♎", element: "air"   },
+    { key: "Sco", symbol: "♏", element: "water" },
+    { key: "Sag", symbol: "♐", element: "fire"  },
+    { key: "Cap", symbol: "♑", element: "earth" },
+    { key: "Aqu", symbol: "♒", element: "air"   },
+    { key: "Pis", symbol: "♓", element: "water" },
 ];
 
-/* Classic planet glyphs. kerykeion names -> glyph. */
+const SIGN_GLYPH = Object.fromEntries(SIGNS.map(s => [s.key, s.symbol]));
+
+/* Glifos planetários clássicos (notação universal, não é idioma). */
 const POINT_GLYPH = {
     sun: "☉", moon: "☽", mercury: "☿", venus: "♀", mars: "♂",
     jupiter: "♃", saturn: "♄", uranus: "♅", neptune: "♆", pluto: "♇",
     asc: "↑",
 };
 
-/* Element tints (light-mode-friendly). Swap for dark as needed. */
+/* Tintas por elemento (paleta clara). */
 const ELEMENT_FILL = {
     fire:  "#c2410c",
     earth: "#65a30d",
@@ -42,14 +87,14 @@ const ELEMENT_FILL = {
 };
 
 const ASPECT_COLOR = {
-    conjunction: "#0369a1",  // fusion
-    sextile:     "#059669",  // harmony, light
-    square:      "#b45309",  // tension, mild
-    trine:       "#047857",  // harmony, strong
-    opposition:  "#be123c",  // tension, strong
+    conjunction: "#0369a1",
+    sextile:     "#059669",
+    square:      "#b45309",
+    trine:       "#047857",
+    opposition:  "#be123c",
 };
 
-/* Aspect detection — matches the canonical algorithm in §03/§05. */
+/* Definição de aspectos (espelha a lógica canónica do backend). */
 const ASPECTS = [
     { key: "conjunction", angle:   0, orb: 8 },
     { key: "sextile",     angle:  60, orb: 5 },
@@ -58,25 +103,47 @@ const ASPECTS = [
     { key: "opposition",  angle: 180, orb: 8 },
 ];
 
-/* ---------- geometry helpers ---------- */
+const ASPECT_HARMONY = new Set(["sextile", "trine"]);
 
-function svgCoordsForAngle(angleDeg, radius) {
-    // angleDeg = absolute ecliptic longitude (Aries = 0°). Visual: Aries on
-    // the left, counter-clockwise. So visual polar angle = π − λ.
+/* ============================================================
+ *  Geometria SVG
+ * ============================================================ */
+
+function svgCoordsForAngle(angleDeg) {
+    // longitude absoluta (Áries = 0°). Visual: Áries à esquerda, anti-horário.
+    // ângulo polar visual = π − λ.
     const theta = Math.PI - angleDeg * Math.PI / 180;
     return { dx: Math.cos(theta), dy: -Math.sin(theta) };
 }
 
 function svgPoint(cx, cy, angleDeg, radius) {
-    const { dx, dy } = svgCoordsForAngle(angleDeg, radius);
+    const { dx, dy } = svgCoordsForAngle(angleDeg);
     return { x: cx + radius * dx, y: cy + radius * dy };
 }
 
 function circularSeparation(a, b) {
-    // 0..180
     const d = Math.abs(((a - b) % 360 + 360) % 360);
     return Math.min(d, 360 - d);
 }
+
+function ringPath(arcStartDeg, arcEndDeg, rOuter, rInner, cx, cy) {
+    const a = svgPoint(cx, cy, arcStartDeg, rOuter);
+    const b = svgPoint(cx, cy, arcEndDeg,   rOuter);
+    const c = svgPoint(cx, cy, arcEndDeg,   rInner);
+    const d = svgPoint(cx, cy, arcStartDeg, rInner);
+    const largeArc = (arcEndDeg - arcStartDeg > 180) ? 1 : 0;
+    return [
+        `M ${a.x} ${a.y}`,
+        `A ${rOuter} ${rOuter} 0 ${largeArc} 0 ${b.x} ${b.y}`,
+        `L ${c.x} ${c.y}`,
+        `A ${rInner} ${rInner} 0 ${largeArc} 1 ${d.x} ${d.y}`,
+        "Z",
+    ].join(" ");
+}
+
+/* ============================================================
+ *  Helpers de apresentação (texto)
+ * ============================================================ */
 
 const _HOUSE_NUM = {
     First: 1, Second: 2, Third: 3, Fourth: 4, Fifth: 5, Sixth: 6,
@@ -90,8 +157,26 @@ function houseNumber(house) {
     return house;
 }
 
+function degreeLabel(position) {
+    const d = Math.floor(position);
+    const m = Math.round((position % 1) * 60);
+    return `${d}° ${m}'`;
+}
+
+function birthLine(birth) {
+    return `Nascimento: <strong>${birth.date}</strong> ${birth.time} em ` +
+           `<strong>${birth.city}</strong> <small class="has-text-grey">(${birth.tz})</small>`;
+}
+
+function retroTag(p) {
+    return p.retrograde ? ' <span class="tag is-light" title="Retrógrado">R</span>' : "";
+}
+
+/* ============================================================
+ *  Detecção de aspectos (intra-mapa)
+ * ============================================================ */
+
 function detectAspects(points) {
-    // points: Map<string, {lon, sign, ...}>. Returns {a,b,aspect,orb}
     const names = Array.from(points.keys());
     const out = [];
     for (let i = 0; i < names.length; i++) {
@@ -103,13 +188,12 @@ function detectAspects(points) {
                 const d = Math.abs(sep - asp.angle);
                 if (d <= asp.orb) {
                     out.push({
-                        a: names[i],
-                        b: names[j],
+                        a: names[i], b: names[j],
                         aspect: asp.key,
                         orb: Math.round(d * 100) / 100,
-                        isHarmony: asp.key === "sextile" || asp.key === "trine",
+                        isHarmony: ASPECT_HARMONY.has(asp.key),
                     });
-                    break; // first match wins
+                    break;
                 }
             }
         }
@@ -117,30 +201,91 @@ function detectAspects(points) {
     return out;
 }
 
-/* ---------- SVG renderers ---------- */
+/* ============================================================
+ *  Tabelas de detalhes partilhadas
+ * ============================================================ */
 
-function ringPath(arcStartDeg, arcEndDeg, rOuter, rInner, cx, cy) {
-    // Two arcs, outer and inner, producing a ring segment.
-    const a = svgPoint(cx, cy, arcStartDeg, rOuter);
-    const b = svgPoint(cx, cy, arcEndDeg,   rOuter);
-    const c = svgPoint(cx, cy, arcEndDeg,   rInner);
-    const d = svgPoint(cx, cy, arcStartDeg, rInner);
-    const largeArc = (arcEndDeg - arcStartDeg > 180) ? 1 : 0;
-    return [
-        `M ${a.x} ${a.y}`,
-        `A ${rOuter} ${rOuter} 0 ${largeArc} 0 ${b.x} ${b.y}`,
-        `L ${c.x} ${c.y}`,
-        `A ${rInner} ${rInner} 0 ${largeArc} 1 ${d.x} ${d.y}`,
-        `Z`,
-    ].join(" ");
+/* Uma coluna = { header, cell(key, point), center? }.
+ * As colunas reutilizáveis abaixo cobrem todos os métodos. */
+
+const COL_PONTO     = { header: "Ponto",   cell: (k, p) =>
+    `<span style="font-size:18px;margin-right:6px">${POINT_GLYPH[k] || "·"}</span>` +
+    `<strong>${pointLabel(k)}</strong>${retroTag(p)}` };
+
+const COL_SIGNO     = { header: "Signo",   cell: (k, p) => signLabel(p.sign) };
+
+const COL_GRAU      = { header: "Grau",    cell: (k, p) =>
+    `${degreeLabel(p.position)} <small class="has-text-grey">(${p.lon.toFixed(2)}°)</small>` };
+
+const COL_SEPHIROTH = { header: "Sephiroth", cell: (k, p) => p.sephirah_traditional };
+
+const COL_CASA      = { header: "Casa",    cell: (k, p) => houseNumber(p.house) };
+
+const COL_TITULO    = { header: "Título Hermético", cell: (k, p) =>
+    p.hermetic_title
+        ? `<span class="tag is-warning is-light">${p.hermetic_title}</span>`
+        : `<span class="has-text-grey">—</span>` };
+
+const COL_ANJO      = { header: "Anjo", cell: (k, p) => {
+    const idx = angelSectorForLon(p.lon);
+    return ANGELS[idx] ? ANGELS[idx].angel : "—";
+}};
+
+function pointTable(points, columns) {
+    const header = columns.map(c =>
+        `<th class="has-text-centered">${c.header}</th>`).join("");
+    const rows = Object.entries(points).map(([k, p]) =>
+        `<tr>${columns.map(c => `<td class="has-text-centered">${c.cell(k, p)}</td>`).join("")}</tr>`).join("");
+    return `
+        <table class="table is-fullwidth is-narrow is-striped mt-4">
+            <thead><tr>${header}</tr></thead>
+            <tbody>${rows}</tbody>
+        </table>`;
 }
 
+function aspectTable(aspects) {
+    const rows = aspects.length === 0
+        ? `<tr><td colspan="4" class="has-text-grey">Nenhum aspecto detetado.</td></tr>`
+        : aspects.map(a => {
+            const tag = a.isHarmony
+                ? `<span class="tag is-link is-light">${aspectLabel(a.aspect)}</span>`
+                : `<span class="tag is-warning is-light">${aspectLabel(a.aspect)}</span>`;
+            return `
+                <tr>
+                    <td>${POINT_GLYPH[a.a] || "·"} ${pointLabel(a.a)}</td>
+                    <td>${tag}</td>
+                    <td>${POINT_GLYPH[a.b] || "·"} ${pointLabel(a.b)}</td>
+                    <td>${a.orb}°</td>
+                </tr>`;
+        }).join("");
+    return `
+        <h3 class="subtitle is-5 mt-5">Aspectos do Mapa</h3>
+        <table class="table is-fullwidth is-narrow is-striped">
+            <thead><tr><th class="has-text-centered">Ponto A</th><th class="has-text-centered">Aspecto</th><th class="has-text-centered">Ponto B</th><th class="has-text-centered">Orbe</th></tr></thead>
+            <tbody>${rows}</tbody>
+        </table>`;
+}
+
+function detailPanel(chart, inner, opts = {}) {
+    const { name } = chart;
+    return `
+        <div class="box">
+            <h2 class="subtitle">${opts.title || "Detalhes do Mapa"} — ${name || "—"}</h2>
+            <p class="is-size-6">${birthLine(chart.birth)}</p>
+            ${opts.note ? `<p class="is-size-7 has-text-grey mt-1">${opts.note}</p>` : ""}
+            ${inner}
+        </div>`;
+}
+
+/* ============================================================
+ *  Roda natal (12 signos)
+ * ============================================================ */
+
 function signRing(cx, cy, rOuter, rInner) {
-    // 12 sign slices, counter-clockwise from Aries-on-the-left.
     return SIGNS.map((s, i) => {
         const start = i * 30;
         const end   = (i + 1) * 30;
-        const fill  = ELEMENT_FILL[s.element] + "22"; // light tint
+        const fill  = ELEMENT_FILL[s.element] + "22";
         const stroke= ELEMENT_FILL[s.element] + "88";
         const label = svgPoint(cx, cy, start + 15, (rOuter + rInner) / 2);
         return `
@@ -148,15 +293,13 @@ function signRing(cx, cy, rOuter, rInner) {
                   fill="${fill}" stroke="${stroke}" stroke-width="1"/>
             <text x="${label.x}" y="${label.y}"
                   text-anchor="middle" dominant-baseline="central"
-                  font-size="18" fill="${ELEMENT_FILL[s.element]}">${s.symbol}</text>
-        `;
+                  font-size="18" fill="${ELEMENT_FILL[s.element]}">${s.symbol}</text>`;
     }).join("");
 }
 
 function pointMarker(cx, cy, name, lon, rPoint, rGlyph) {
     const base = svgPoint(cx, cy, lon, rPoint);
     const tick = svgPoint(cx, cy, lon, rPoint - 6);
-    const glyph = POINT_GLYPH[name] || "·";
     const labelPoint = svgPoint(cx, cy, lon, rGlyph);
     const color = name === "asc" ? "#0369a1" : "#1c1917";
     return `
@@ -165,32 +308,27 @@ function pointMarker(cx, cy, name, lon, rPoint, rGlyph) {
         <text x="${labelPoint.x}" y="${labelPoint.y}"
               text-anchor="middle" dominant-baseline="central"
               font-size="${name === 'asc' ? 16 : 18}" font-weight="${name === 'asc' ? 700 : 400}"
-              fill="${color}">${glyph}</text>
-    `;
+              fill="${color}">${POINT_GLYPH[name] || "·"}</text>`;
 }
 
 function aspectLine(cx, cy, rAspect, pi, pj, aspectKey) {
     const a = svgPoint(cx, cy, pi.lon, rAspect);
     const b = svgPoint(cx, cy, pj.lon, rAspect);
     const color = ASPECT_COLOR[aspectKey] || "#888";
-    const dash  = aspectKey === "square" || aspectKey === "opposition" ? "3 3" : "0";
+    const dash  = (aspectKey === "square" || aspectKey === "opposition") ? "3 3" : "0";
     return `
         <line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}"
-              stroke="${color}" stroke-width="1" stroke-dasharray="${dash}" opacity="0.75"/>
-    `;
+              stroke="${color}" stroke-width="1" stroke-dasharray="${dash}" opacity="0.75"/>`;
 }
 
 function renderWheel(chart, target) {
     const cx = 250, cy = 250;
     const rOuter = 220, rInner = 180, rPoint = 150, rGlyph = 135, rAspect = 120;
-
-    // Points as Map
     const points = new Map(Object.entries(chart.points));
 
-    // Aspect lines (limit to major aspects; draw harmony lines first, tensions on top)
     const aspects = detectAspects(points);
-    const harmonyLines = aspects.filter(a => a.isHarmony);
-    const tensionLines = aspects.filter(a => !a.isHarmony);
+    const harmony  = aspects.filter(a =>  a.isHarmony);
+    const tension  = aspects.filter(a => !a.isHarmony);
 
     const svg = `
     <svg viewBox="0 0 500 500" width="100%" style="max-width: 540px;" xmlns="http://www.w3.org/2000/svg">
@@ -201,36 +339,30 @@ function renderWheel(chart, target) {
             </radialGradient>
         </defs>
         <circle cx="${cx}" cy="${cy}" r="${rOuter + 8}" fill="url(#wheelBg)" stroke="#c5b88a" stroke-width="1"/>
-        <circle cx="${cx}" cy="${cy}" r="${rOuter}"     fill="none"         stroke="#c5b88a" stroke-width="1"/>
-        <circle cx="${cx}" cy="${cy}" r="${rInner}"     fill="none"         stroke="#c5b88a" stroke-width="1"/>
-        <circle cx="${cx}" cy="${cy}" r="${rPoint + 4}" fill="none"         stroke="#c5b88a55" stroke-width="1" stroke-dasharray="2 3"/>
+        <circle cx="${cx}" cy="${cy}" r="${rOuter}"     fill="none" stroke="#c5b88a" stroke-width="1"/>
+        <circle cx="${cx}" cy="${cy}" r="${rInner}"     fill="none" stroke="#c5b88a" stroke-width="1"/>
+        <circle cx="${cx}" cy="${cy}" r="${rPoint + 4}" fill="none" stroke="#c5b88a55" stroke-width="1" stroke-dasharray="2 3"/>
         ${signRing(cx, cy, rOuter, rInner)}
-        ${harmonyLines.map((a) => aspectLine(cx, cy, rAspect, points.get(a.a), points.get(a.b), a.aspect)).join("")}
-        ${tensionLines.map((a) => aspectLine(cx, cy, rAspect, points.get(a.a), points.get(a.b), a.aspect)).join("")}
+        ${harmony.map(a => aspectLine(cx, cy, rAspect, points.get(a.a), points.get(a.b), a.aspect)).join("")}
+        ${tension.map(a => aspectLine(cx, cy, rAspect, points.get(a.a), points.get(a.b), a.aspect)).join("")}
         ${Array.from(points.entries()).map(([name, p]) => pointMarker(cx, cy, name, p.lon, rPoint, rGlyph)).join("")}
     </svg>`;
     target.innerHTML = svg;
     return { aspects };
 }
 
-/* ---------- hermetic wheel (24 sectors of 15°, suit-coloured) ---------- */
+/* ============================================================
+ *  Roda hermética (24 sectors de 15°)
+ * ============================================================ */
 
 /*
- * Hermetic astrology splits each zodiac sign into two 15° halves — an "early"
- * half [0,15) and a "late" half [15,30] — each ruled by a tarot court card.
- * The 24 resulting sectors are the "24 signs" of the hermetic system. The
- * wheel draws those 24 sectors, coloured by suit (Wands=Fire, Coins=Earth,
- * Swords=Air, Cups=Water), with the court-card title in each slice. Planets
- * are plotted by absolute longitude; any planet whose degree falls in a
- * cuspal band (≤5° or ≥25°) — where a hermetic title is actually assigned —
- * is highlighted.
- *
- * The court-card assignment mirrors app/hermetic.py: _EARLY (pos≤5) and
- * _LATE (pos≥25). The mid-sector (6–24°) carries no title; the sign itself
- * is shown there so the ring reads as 24 readable slices.
+ * Cada signo é dividido em duas metades de 15° — primeira [0,15) e segunda
+ * [15,30] — regadas por cartas de corte do tarô, associadas a um naipe:
+ * Bastões=Fogo, Moedas=Terra, Espadas=Ar, Taças=Água. Planetas em graus
+ * cuspais (≤5° ou ≥25°) recebem um título hermético e são destacados.
+ * Espelha app/hermetic.py.
  */
 
-// sign index -> {early, late} court-card titles (mirrors app/hermetic.py)
 const HERMETIC_SECTORS = [
     { sign: "Ari", early: "Rainha de Bastões",   late: "Principe de Moedas" },
     { sign: "Tau", early: "Principe de Moedas",  late: "Rei de Espadas" },
@@ -246,32 +378,28 @@ const HERMETIC_SECTORS = [
     { sign: "Pis", early: "Rei de Taças",        late: "Rainha de Bastões" },
 ];
 
-// Suit -> element. Golden Dawn attribution: Wands=Fire, Coins=Earth, Swords=Air, Cups=Water.
 const SUIT_ELEMENT = {
-    "Bastões": "fire",
-    "Moedas":  "earth",
-    "Espadas": "air",
-    "Taças":   "water",
+    "Bastões": "fire", "Moedas": "earth", "Espadas": "air", "Taças": "water",
 };
+
 function suitOf(title) {
     const m = / (Bastões|Moedas|Espadas|Taças)$/.exec(title || "");
     return m ? m[1] : null;
 }
 
-// Build the 24 sectors with absolute [start,end) degree ranges and colours.
 function hermeticSectors() {
     const out = [];
     HERMETIC_SECTORS.forEach((s, i) => {
         const base = i * 30;
         const earlySuit = suitOf(s.early);
         const lateSuit  = suitOf(s.late);
+        const earlyElem = SUIT_ELEMENT[earlySuit] || SIGNS[i].element;
+        const lateElem  = SUIT_ELEMENT[lateSuit]  || SIGNS[i].element;
         out.push(
             { start: base, end: base + 15, sign: s.sign, half: "early", title: s.early,
-              element: SUIT_ELEMENT[earlySuit] || SIGNS[i].element,
-              color: ELEMENT_FILL[SUIT_ELEMENT[earlySuit] || SIGNS[i].element] },
+              element: earlyElem, color: ELEMENT_FILL[earlyElem] },
             { start: base + 15, end: base + 30, sign: s.sign, half: "late", title: s.late,
-              element: SUIT_ELEMENT[lateSuit] || SIGNS[i].element,
-              color: ELEMENT_FILL[SUIT_ELEMENT[lateSuit] || SIGNS[i].element] },
+              element: lateElem, color: ELEMENT_FILL[lateElem] },
         );
     });
     return out;
@@ -284,30 +412,26 @@ function hermeticRing(cx, cy, rOuter, rInner) {
         const mid    = (sec.start + sec.end) / 2;
         const label  = svgPoint(cx, cy, mid, (rOuter + rInner) / 2 + 6);
         const signLbl= svgPoint(cx, cy, mid, rInner - 14);
-        // Rotate the title so it reads along the arc.
         const rot = (180 - mid) % 360;
         return `
             <path d="${ringPath(sec.start, sec.end, rOuter, rInner, cx, cy)}"
                   fill="${fill}" stroke="${stroke}" stroke-width="1"/>
             <text x="${signLbl.x}" y="${signLbl.y}"
                   text-anchor="middle" dominant-baseline="central"
-                  font-size="9" font-weight="700" fill="${sec.color}">${sec.sign}</text>
+                  font-size="13" font-weight="700" fill="${sec.color}">${SIGN_GLYPH[sec.sign] || ""}</text>
             <text x="${label.x}" y="${label.y}"
                   text-anchor="middle" dominant-baseline="central"
                   font-size="6.5" fill="${sec.color}"
                   transform="rotate(${rot}, ${label.x}, ${label.y})">
                   ${sec.title.replace(" de ", " ")}
-            </text>
-        `;
+            </text>`;
     }).join("");
 }
 
 function hermeticMarker(cx, cy, name, lon, position, rPoint, rGlyph) {
     const base = svgPoint(cx, cy, lon, rPoint);
     const tick = svgPoint(cx, cy, lon, rPoint - 6);
-    const glyph = POINT_GLYPH[name] || "·";
     const labelPoint = svgPoint(cx, cy, lon, rGlyph);
-    // Cuspal bands: first 5° or last 5° of the sign => a hermetic title is set.
     const isCuspal = position <= 5 || position >= 25;
     const color = name === "asc" ? "#0369a1" : (isCuspal ? "#b45309" : "#1c1917");
     const ring = isCuspal
@@ -320,8 +444,7 @@ function hermeticMarker(cx, cy, name, lon, position, rPoint, rGlyph) {
         <text x="${labelPoint.x}" y="${labelPoint.y}"
               text-anchor="middle" dominant-baseline="central"
               font-size="${name === 'asc' ? 16 : 18}" font-weight="${isCuspal ? 700 : 400}"
-              fill="${color}">${glyph}</text>
-    `;
+              fill="${color}">${POINT_GLYPH[name] || "·"}</text>`;
 }
 
 function renderHermeticWheel(chart, target) {
@@ -348,49 +471,14 @@ function renderHermeticWheel(chart, target) {
     target.innerHTML = svg;
 }
 
-/* ---------- hermetic detail table ---------- */
-
-function renderHermeticDetails(chart, target) {
-    const { points, birth, name } = chart;
-    const rows = Object.entries(points).map(([n, p]) => {
-        const deg = `${Math.floor(p.position)}° ${Math.round((p.position % 1) * 60)}'`;
-        const title = p.hermetic_title
-            ? `<span class="tag is-warning is-light">${p.hermetic_title}</span>`
-            : `<span class="has-text-grey">—</span>`;
-        return `
-            <tr>
-                <td><span style="font-size:18px;margin-right:6px">${POINT_GLYPH[n] || "·"}</span><strong>${n}</strong>
-                    ${p.retrograde ? ' <span class="tag is-light">R</span>' : ''}</td>
-                <td>${p.sign}</td>
-                <td>${deg} <small class="has-text-grey">(${p.lon.toFixed(2)}°)</small></td>
-                <td>${title}</td>
-            </tr>`;
-    }).join("");
-
-    target.innerHTML = `
-        <div class="box">
-            <h2 class="subtitle">Detalhes Herméticos — ${name || "—"}</h2>
-            <p class="is-size-6">Nascimento: <strong>${birth.date}</strong> ${birth.time} em
-                <strong>${birth.city}</strong> <small class="has-text-grey">(${birth.tz})</small></p>
-            <p class="is-size-7 has-text-grey">Títulos em destaque = graus cuspais (≤5° ou ≥25°)</p>
-            <table class="table is-fullwidth is-narrow is-striped mt-4">
-                <thead><tr><th>Ponto</th><th>Signo</th><th>Grau</th><th>Título Hermético</th></tr></thead>
-                <tbody>${rows}</tbody>
-            </table>
-        </div>`;
-}
-
-/* ---------- angels wheel (72 Shem HaMephorash sectors of 5°) ---------- */
+/* ============================================================
+ *  Roda dos 72 Anjos do Shem HaMephorash (sectores de 5°)
+ * ============================================================ */
 
 /*
- * The 72 Angels of the Shem HaMephorash: 6 per zodiac sign, one per 5° bin
- * (half-open: [0,5), [5,10), [10,15), [15,20), [20,25), [25,30]). The wheel
- * draws all 72 sectors in a 5°-grid ring (counter-clockwise from 0° Aries,
- * matching the natal wheel's orientation), coloured by sign element. Each
- * sector carries its angel name; natal planets are plotted by absolute
- * longitude and land on the sector of their ruling angel — those sectors are
- * highlighted. The naming mirrors app/angels.py (_ANGELS), which is the source
- * of truth; the order here is sign-then-bin, CCW from 0° Aries.
+ * 72 anjos: 6 por signo, 1 por bin de 5° ([0,5), [5,10), ... [25,30]).
+ * Os planetas natais caem no sector do seu anjo regente — esses sectors
+ * são destacados. Espelha app/angels.py (fonte de verdade).
  */
 
 const ANGELS = [
@@ -468,26 +556,18 @@ const ANGELS = [
     { sign: "Pis", bin: 5, angel: "Mumiah" },
 ];
 
-// Absolute [start,end) degree range for each angel sector, CCW from 0° Aries.
 function angelSectors() {
-    return ANGELS.map((a, i) => {
+    return ANGELS.map(a => {
         const signIdx = SIGNS.findIndex(s => s.key === a.sign);
         const base = signIdx * 30 + a.bin * 5;
         const elem = SIGNS[signIdx].element;
-        return {
-            ...a,
-            start: base,
-            end: base + 5,
-            color: ELEMENT_FILL[elem],
-            element: elem,
-        };
+        return { ...a, start: base, end: base + 5, color: ELEMENT_FILL[elem], element: elem };
     });
 }
 
-// Which sector index a planet lands in (mirrors _angel_bin + sign offset).
 function angelSectorForLon(lon) {
     const norm = ((lon % 360) + 360) % 360;
-    return Math.floor(norm / 5); // 0..71
+    return Math.floor(norm / 5);
 }
 
 function angelsRing(cx, cy, rOuter, rInner) {
@@ -495,7 +575,6 @@ function angelsRing(cx, cy, rOuter, rInner) {
         const fill = sec.color + "16";
         const stroke = sec.color + "66";
         const mid = (sec.start + sec.end) / 2;
-        // Sign boundary every 6 sectors gets a heavier divider.
         const isSignBoundary = sec.bin === 0;
         const signLbl = svgPoint(cx, cy, mid, rInner - 14);
         const angelLbl = svgPoint(cx, cy, mid, (rOuter + rInner) / 2 + 6);
@@ -503,21 +582,19 @@ function angelsRing(cx, cy, rOuter, rInner) {
         return `
             <path d="${ringPath(sec.start, sec.end, rOuter, rInner, cx, cy)}"
                   fill="${fill}" stroke="${stroke}" stroke-width="${isSignBoundary ? 1.4 : 0.6}"/>
-            ${sec.bin === 0 ? `<text x="${signLbl.x}" y="${signLbl.y}"
+            ${isSignBoundary ? `<text x="${signLbl.x}" y="${signLbl.y}"
                   text-anchor="middle" dominant-baseline="central"
-                  font-size="10" font-weight="700" fill="${sec.color}">${sec.sign}</text>` : ""}
+                  font-size="12" font-weight="700" fill="${sec.color}">${SIGN_GLYPH[sec.sign] || ""}</text>` : ""}
             <text x="${angelLbl.x}" y="${angelLbl.y}"
                   text-anchor="middle" dominant-baseline="central"
                   font-size="5.5" fill="${sec.color}" opacity="0.9"
-                  transform="rotate(${rot}, ${angelLbl.x}, ${angelLbl.y})">${sec.angel}</text>
-        `;
+                  transform="rotate(${rot}, ${angelLbl.x}, ${angelLbl.y})">${sec.angel}</text>`;
     }).join("");
 }
 
 function angelMarker(cx, cy, name, lon, rPoint, rGlyph) {
     const base = svgPoint(cx, cy, lon, rPoint);
     const tick = svgPoint(cx, cy, lon, rPoint - 6);
-    const glyph = POINT_GLYPH[name] || "·";
     const labelPoint = svgPoint(cx, cy, lon, rGlyph);
     const color = name === "asc" ? "#0369a1" : "#1c1917";
     return `
@@ -526,23 +603,19 @@ function angelMarker(cx, cy, name, lon, rPoint, rGlyph) {
         <text x="${labelPoint.x}" y="${labelPoint.y}"
               text-anchor="middle" dominant-baseline="central"
               font-size="${name === 'asc' ? 16 : 18}" font-weight="${name === 'asc' ? 700 : 400}"
-              fill="${color}">${glyph}</text>
-    `;
+              fill="${color}">${POINT_GLYPH[name] || "·"}</text>`;
 }
 
 function renderAngelsWheel(chart, target) {
     const cx = 250, cy = 250;
     const rOuter = 220, rInner = 168, rPoint = 150, rGlyph = 132;
     const points = Object.entries(chart.points);
-
-    // Highlight sectors occupied by a planet.
     const occupied = new Set(points.map(([, p]) => angelSectorForLon(p.lon)));
 
     const sectorsSvg = angelSectors().map((sec, i) => {
-        if (!occupied.has(i)) return ""; // only highlight occupied sectors with a halo
-        const fill = sec.color + "33";
+        if (!occupied.has(i)) return "";
         return `<path d="${ringPath(sec.start, sec.end, rOuter, rInner, cx, cy)}"
-                      fill="${fill}" stroke="${sec.color}" stroke-width="2" opacity="0.9"/>`;
+                      fill="${sec.color}33" stroke="${sec.color}" stroke-width="2" opacity="0.9"/>`;
     }).join("");
 
     const svg = `
@@ -564,102 +637,33 @@ function renderAngelsWheel(chart, target) {
     target.innerHTML = svg;
 }
 
-/* ---------- angels detail table ---------- */
-
-function renderAngelsDetails(chart, target) {
-    const { points, birth, name } = chart;
-    const rows = Object.entries(points).map(([n, p]) => {
-        const deg = `${Math.floor(p.position)}° ${Math.round((p.position % 1) * 60)}'`;
-        const idx = angelSectorForLon(p.lon);
-        const angelName = ANGELS[idx] ? ANGELS[idx].angel : "—";
-        return `
-            <tr>
-                <td><span style="font-size:18px;margin-right:6px">${POINT_GLYPH[n] || "·"}</span><strong>${n}</strong>
-                    ${p.retrograde ? ' <span class="tag is-light">R</span>' : ''}</td>
-                <td>${p.sign}</td>
-                <td>${deg} <small class="has-text-grey">(${p.lon.toFixed(2)}°)</small></td>
-                <td>${angelName}</td>
-            </tr>`;
-    }).join("");
-
-    target.innerHTML = `
-        <div class="box">
-            <h2 class="subtitle">Anjos do Shem HaMephorash — ${name || "—"}</h2>
-            <p class="is-size-6">Nascimento: <strong>${birth.date}</strong> ${birth.time} em
-                <strong>${birth.city}</strong> <small class="has-text-grey">(${birth.tz})</small></p>
-            <p class="is-size-7 has-text-grey">72 anjos — 6 por signo, 1 por bin de 5°. Setores destacados = anjo regente do planeta.</p>
-            <table class="table is-fullwidth is-narrow is-striped mt-4">
-                <thead><tr><th>Ponto</th><th>Signo</th><th>Grau</th><th>Anjo</th></tr></thead>
-                <tbody>${rows}</tbody>
-            </table>
-        </div>`;
-}
-
-/* ---------- detail list (Bulma table) ---------- */
+/* ============================================================
+ *  Tabelas de detalhes (um render por método)
+ * ============================================================ */
 
 function renderDetails(chart, target, aspects) {
-    const { points, birth, name } = chart;
+    target.innerHTML = detailPanel(chart,
+        pointTable(chart.points, [COL_PONTO, COL_SIGNO, COL_GRAU, COL_SEPHIROTH, COL_CASA]) +
+        aspectTable(aspects),
+        { title: "Detalhes do Mapa" });
+}
 
-    const headerRow = `
-        <tr>
-            <th>Ponto</th>
-            <th>Signo</th>
-            <th>Grau</th>
-            <th>Sephiroth</th>
-            <th>Casa</th>
-        </tr>`;
+function renderHermeticDetails(chart, target) {
+    target.innerHTML = detailPanel(chart,
+        pointTable(chart.points, [COL_PONTO, COL_SIGNO, COL_GRAU, COL_TITULO]),
+        { title: "Detalhes Herméticos",
+          note: "Títulos em destaque = graus cuspais (≤5° ou ≥25°)" });
+}
 
-    const rows = Object.entries(points).map(([name, p]) => {
-        const deg = `${Math.floor(p.position)}° ${Math.round((p.position % 1) * 60)}'`;
-        return `
-            <tr>
-                <td>
-                    <span style="font-size:18px;margin-right:6px">${POINT_GLYPH[name] || "·"}</span>
-                    <strong>${name}</strong>
-                    ${p.retrograde ? ' <span class="tag is-light">R</span>' : ''}
-                </td>
-                <td>${p.sign}</td>
-                <td>${deg} <small class="has-text-grey">(${p.lon.toFixed(2)}° abs)</small></td>
-                <td>${p.sephirah_traditional}</td>
-                <td>${houseNumber(p.house)}</td>
-            </tr>`;
-    }).join("");
+function renderAngelsDetails(chart, target) {
+    target.innerHTML = detailPanel(chart,
+        pointTable(chart.points, [COL_PONTO, COL_SIGNO, COL_GRAU, COL_ANJO]),
+        { title: "Anjos do Shem HaMephorash",
+          note: "72 anjos — 6 por signo, 1 por intervalo de 5°. Sectores destacados = anjo regente do planeta." });
+}
 
-    const aspectRows = aspects.length === 0
-        ? `<tr><td colspan="4">Nenhum aspecto detectado.</td></tr>`
-        : aspects.map(a => {
-            const tag = a.isHarmony
-                ? `<span class="tag is-link is-light">${a.aspect}</span>`
-                : `<span class="tag is-warning is-light">${a.aspect}</span>`;
-            return `
-                <tr>
-                    <td>${POINT_GLYPH[a.a] || "·"} ${a.a}</td>
-                    <td>${tag}</td>
-                    <td>${POINT_GLYPH[a.b] || "·"} ${a.b}</td>
-                    <td>${a.orb}°</td>
-                </tr>`;
-        }).join("");
-
-    target.innerHTML = `
-        <div class="box">
-            <h2 class="subtitle">Detalhes do Mapa — ${name || "—"}</h2>
-            <p class="is-size-6">
-                Nascimento: <strong>${birth.date}</strong> ${birth.time} in
-                <strong>${birth.city}</strong> <small class="has-text-grey">(${birth.tz})</small>
-            </p>
-
-            <table class="table is-fullwidth is-narrow is-striped mt-4">
-                <thead>${headerRow}</thead>
-                <tbody>${rows}</tbody>
-            </table>
-
-            <h3 class="subtitle is-5 mt-5">Aspectos Intra-Chart</h3>
-            <table class="table is-fullwidth is-narrow is-striped">
-                <thead>
-                    <tr><th>Ponto A</th><th>Aspecto</th><th>Ponto B</th><th>Orbe</th></tr>
-                </thead>
-                <tbody>${aspectRows}</tbody>
-            </table>
-        </div>
-    `;
+function renderSephirothDetails(chart, target) {
+    target.innerHTML = detailPanel(chart,
+        pointTable(chart.points, [COL_PONTO, COL_SIGNO, COL_GRAU, COL_SEPHIROTH, COL_CASA]),
+        { title: "Detalhes do Mapa" });
 }

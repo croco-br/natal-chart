@@ -138,51 +138,6 @@ function toggleDetails() {
     }
 }
 
-/* ---------- sephiroth details table (no intra-chart aspects) ---------- */
-
-function renderSephirothDetails(chart, target) {
-    const { points, birth, name } = chart;
-
-    const rows = Object.entries(points).map(([n, p]) => {
-        const deg = `${Math.floor(p.position)}° ${Math.round((p.position % 1) * 60)}'`;
-        return `
-            <tr>
-                <td>
-                    <span style="font-size:18px;margin-right:6px">${POINT_GLYPH[n] || "·"}</span>
-                    <strong>${n}</strong>
-                    ${p.retrograde ? ' <span class="tag is-light">R</span>' : ''}
-                </td>
-                <td>${p.sign}</td>
-                <td>${deg} <small class="has-text-grey">(${p.lon.toFixed(2)}° abs)</small></td>
-                <td>${p.sephirah_traditional}</td>
-                <td>${houseNumber(p.house)}</td>
-            </tr>`;
-    }).join("");
-
-    target.innerHTML = `
-        <div class="box">
-            <h2 class="subtitle">Detalhes do Mapa — ${name || "—"}</h2>
-            <p class="is-size-6">
-                Nascimento: <strong>${birth.date}</strong> ${birth.time} in
-                <strong>${birth.city}</strong> <small class="has-text-grey">(${birth.tz})</small>
-            </p>
-
-            <table class="table is-fullwidth is-narrow is-striped mt-4">
-                <thead>
-                    <tr>
-                        <th>Ponto</th>
-                        <th>Signo</th>
-                        <th>Grau</th>
-                        <th>Sephiroth</th>
-                        <th>Casa</th>
-                    </tr>
-                </thead>
-                <tbody>${rows}</tbody>
-            </table>
-        </div>
-    `;
-}
-
 /* ---------- agathadaimon view (guardian angel name) ---------- */
 
 function renderAgathadaimonView(data, container) {
@@ -199,10 +154,10 @@ function renderAgathadaimonView(data, container) {
     const letters = daimon.letters || [];
     const rowsHtml = letters.map(l => `
         <tr>
-            <td><strong>${escapeHtml(l.point)}</strong></td>
-            <td><span class="tag is-primary is-light is-medium">${escapeHtml(l.letter)}</span></td>
+            <td class="has-text-centered"><strong>${escapeHtml(l.point)}</strong></td>
+            <td class="has-text-centered"><span class="tag is-primary is-light is-medium">${escapeHtml(l.letter)}</span></td>
             <td class="title is-5 has-text-centered">${escapeHtml(l.hebrew || '')}</td>
-            <td class="is-size-7">${escapeHtml(l.description || '—')}</td>
+            <td class="is-size-7 has-text-centered">${escapeHtml(l.description || '—')}</td>
         </tr>`).join('');
 
     container.innerHTML = `
@@ -217,7 +172,7 @@ function renderAgathadaimonView(data, container) {
 
             <h3 class="subtitle is-5">Letras e Correspondências</h3>
             <table class="table is-fullwidth is-narrow is-striped">
-                <thead><tr><th>Ponto</th><th>Letra</th><th class="has-text-centered">Hebraico</th><th>Descrição</th></tr></thead>
+                <thead><tr><th class="has-text-centered">Ponto</th><th class="has-text-centered">Letra</th><th class="has-text-centered">Hebraico</th><th class="has-text-centered">Descrição</th></tr></thead>
                 <tbody>${rowsHtml}</tbody>
             </table>
             ${methodModal('agathadaimon')}
@@ -251,11 +206,11 @@ const METHOD_INFO = {
         title: 'O que é a Astrologia Hermética?',
         body: `
             <p>A <strong>Astrologia Hermética</strong> subdivide cada signo em
-            duas metades de 15° — <em>early</em> [0,15) e <em>late</em> [15,30] —
-            regidas por cartas de corte do tarô (Rei, Rainha, Príncipe, Príncipe)
-            e associadas a um naipe: <strong>Bastões</strong> (Fogo),
-            <strong>Moedas</strong> (Terra), <strong>Espadas</strong> (Ar) e
-            <strong>Taças</strong> (Água).</p>
+            duas metades de 15° — primeira [0,15) e segunda [15,30] — regidas
+            por cartas de corte do tarô (Rei, Rainha, Príncipe) e associadas a
+            um naipe: <strong>Bastões</strong> (Fogo), <strong>Moedas</strong>
+            (Terra), <strong>Espadas</strong> (Ar) e <strong>Taças</strong>
+            (Água).</p>
             <p>Os <strong>24 signos</strong> resultantes formam o sistema
             hermético. Planetas cujo grau cai nas bordas cuspais
             (≤5° ou ≥25°) recebem um <strong>título hermético</strong> e são

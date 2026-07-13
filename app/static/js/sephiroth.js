@@ -23,16 +23,16 @@
 // Pillar of Equilibrium (middle): Kether, Da'ath, Tiferet, Yesod, Malkuth
 const SEPHIROTH = {
     Kether:  { x: 180, y: 50,  hebrew: "כתר",     title: "Coroa" },
-    Chockmah:{ x: 265, y: 105, hebrew: "חכמה",    title: "Sabedoria" },
-    Binah:   { x: 95,  y: 105, hebrew: "בינה",     title: "Entendimento" },
-    Daath:   { x: 180, y: 175, hebrew: "דעת",      title: "Conhecimento" },
-    Chesed:  { x: 265, y: 230, hebrew: "חסד",      title: "Misericórdia" },
-    Geburah: { x: 95,  y: 230, hebrew: "גבורה",    title: "Severidade" },
-    Tiferet: { x: 180, y: 300, hebrew: "תפארת",   title: "Beleza" },
-    Netzach: { x: 265, y: 380, hebrew: "נצח",      title: "Vitória" },
-    Hod:     { x: 95,  y: 380, hebrew: "הוד",      title: "Glória" },
-    Yesod:   { x: 180, y: 450, hebrew: "יסוד",     title: "Fundação" },
-    Malkuth: { x: 180, y: 525, hebrew: "מלכות",   title: "Reino" },
+    Chockmah:{ x: 265, y: 140, hebrew: "חכמה",    title: "Sabedoria" },
+    Binah:   { x: 95,  y: 140, hebrew: "בינה",     title: "Entendimento" },
+    Daath:   { x: 180, y: 230, hebrew: "דעת",      title: "Conhecimento" },
+    Chesed:  { x: 265, y: 320, hebrew: "חסד",      title: "Misericórdia" },
+    Geburah: { x: 95,  y: 320, hebrew: "גבורה",    title: "Severidade" },
+    Tiferet: { x: 180, y: 410, hebrew: "תפארת",   title: "Beleza" },
+    Netzach: { x: 265, y: 500, hebrew: "נצח",      title: "Vitória" },
+    Hod:     { x: 95,  y: 500, hebrew: "הוד",      title: "Glória" },
+    Yesod:   { x: 180, y: 590, hebrew: "יסוד",     title: "Fundação" },
+    Malkuth: { x: 180, y: 710, hebrew: "מלכות",   title: "Reino" },
 };
 
 // Traditional Qabalistic (Golden Dawn) colours per sephirah.
@@ -85,12 +85,13 @@ const _POINT_GLYPH = (typeof POINT_GLYPH !== "undefined")
     : { sun:"☉", moon:"☽", mercury:"☿", venus:"♀", mars:"♂",
         jupiter:"♃", saturn:"♄", uranus:"♅", neptune:"♆", pluto:"♇", asc:"↑" };
 
-// Sign key -> zodiac glyph, for rendering inside the spheres. Reuses the
-// global SIGNS map from natal.js when available (shared <script defer> scope).
-const SIGNS_FOR_SEPHIRAH = (typeof SIGNS !== "undefined")
-    ? Object.fromEntries(SIGNS.map(s => [s.key, s.symbol]))
-    : { Ari:"♈", Tau:"♉", Gem:"♊", Can:"♋", Leo:"♌", Vir:"♍",
-        Lib:"♎", Sco:"♏", Sag:"♐", Cap:"♑", Aqu:"♒", Pis:"♓" };
+// Sign key -> short Portuguese name, for rendering inside the spheres.
+// Reuses the global SIGN_PT_SHORT map from natal.js when available.
+const SIGN_SHORT = (typeof SIGN_PT_SHORT !== "undefined")
+    ? SIGN_PT_SHORT
+    : { Ari:"Ári", Tau:"Tau", Gem:"Gêm", Can:"Cân",
+        Leo:"Leã", Vir:"Vir", Lib:"Lib", Sco:"Esc",
+        Sag:"Sag", Cap:"Cap", Aqu:"Aqu", Pis:"Pei" };
 
 const NODE_R = 26;
 
@@ -131,22 +132,24 @@ function sephirahNode(name, planets) {
     const occupied = planets && planets.length > 0;
     const r = NODE_R + (occupied ? Math.min(planets.length, 3) * 2 : 0);
 
-    // Place planet glyphs in a small cluster inside the node, with the sign
-    // name rendered just below each glyph.
+    // Each planet: glyph centered, sign abbreviation below it. When
+    // multiple planets, arrange in a row with per-planet width, centered as
+    // a group over the node.
+    const UNIT_W = 26;
     const glyphHtml = (planets || []).map((p, i) => {
         const count = planets.length;
-        const col = i % 3;
-        const row = Math.floor(i / 3);
-        const spread = count > 1 ? (col - (Math.min(count, 3) - 1) / 2) * 13 : 0;
-        const gx = s.x + spread;
-        const gy = s.y - 6 + row * 14;
-        const sy = gy + 11;
-        const signText = p.point.sign || "";
+        const row = Math.floor(i / 2);
+        const col = i % 2;
+        const groupW = Math.min(count, 2) * UNIT_W;
+        const xOff = count > 1 ? (col * UNIT_W - groupW / 2 + UNIT_W / 2) : 0;
+        const gx = s.x + xOff;
+        const gy = s.y - 3 + row * 17;
+        const signText = SIGN_SHORT[p.point.sign] || p.point.sign || "";
         const title = `${p.name} (${p.point.sign} ${p.point.position.toFixed(1)}°)`;
         return `<text x="${gx}" y="${gy}" text-anchor="middle" dominant-baseline="central"
-                    font-size="16" fill="#1c1917" font-weight="700"><title>${title}</title>${_POINT_GLYPH[p.name] || "·"}</text>
-                <text x="${gx}" y="${sy}" text-anchor="middle" dominant-baseline="central"
-                    font-size="8" fill="#1c1917" opacity="0.8">${signText}</text>`;
+                    font-size="14" fill="#1c1917" font-weight="700"><title>${title}</title>${_POINT_GLYPH[p.name] || "·"}</text>
+                <text x="${gx}" y="${gy + 10}" text-anchor="middle" dominant-baseline="central"
+                    font-size="7" fill="#1c1917" opacity="0.75">${signText}</text>`;
     }).join("");
 
     return `
@@ -173,7 +176,7 @@ function renderTreeOfLife(chart, target) {
                    "Tiferet", "Netzach", "Hod", "Yesod", "Malkuth"];
 
     const svg = `
-    <svg viewBox="0 0 360 580" width="100%" style="max-width: 360px; margin: 0 auto; display:block;"
+    <svg viewBox="0 0 360 790" width="100%" style="max-width: 360px; margin: 0 auto; display:block;"
          xmlns="http://www.w3.org/2000/svg">
         <defs>
             <radialGradient id="treeBg" cx="50%" cy="50%" r="60%">
@@ -181,7 +184,7 @@ function renderTreeOfLife(chart, target) {
                 <stop offset="100%" stop-color="#f1ead8"/>
             </radialGradient>
         </defs>
-        <rect x="0" y="0" width="360" height="580" fill="url(#treeBg)" rx="8"/>
+        <rect x="0" y="0" width="360" height="790" fill="url(#treeBg)" rx="8"/>
         ${pathLines()}
         ${names.map(n => sephirahNode(n, groups[n])).join("")}
     </svg>`;
